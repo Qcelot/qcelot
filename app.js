@@ -82,7 +82,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const subcommand = options[0];
 
       const mode = subcommand.name;
-      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+      const game = subcommand.options?.find(o => o.name === 'game')?.value;
 
       const modeObject = modesMap.get(mode);
       const gameObject = gamesMap.get(mode).get(game);
