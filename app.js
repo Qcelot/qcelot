@@ -1,25 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import {
-  ButtonStyleTypes,
-  InteractionResponseFlags,
-  InteractionResponseType,
-  InteractionType,
-  MessageComponentTypes,
-  verifyKeyMiddleware,
-} from 'discord-interactions';
+import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'discord-interactions';
 import { watchQueue } from './watch.js';
-import { getCachedGameCounts } from "./hypixel.js";
+import { getCachedGameCount } from "./hypixel.js";
+import { modesMap, gamesMap } from './data.js';
+import { watchers, defaults, readWatcherFile, writeWatcherFile, loadWatchers, readDefaultsFile, writeDefaultsFile, loadDefaults } from './state.js';
+import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 
 // Create an express app
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
-// To keep track of our active games
-const WATCHERS_FILE = path.resolve('./watchers.json');
-const watchers = new Map();
 
 import pkg from 'discord.js';
 const { Client, GatewayIntentBits } = pkg;
@@ -29,36 +20,12 @@ client.login(process.env.DISCORD_TOKEN);
 
 client.once('ready', async () => {
   client.user.setPresence({ status: 'invisible' });
-  await loadWatchers();
+  await loadWatchers(client);
+  await loadDefaults();
 });
 
-function readWatcherFile() {
-  if (!fs.existsSync(WATCHERS_FILE)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(WATCHERS_FILE, 'utf8'));
-  } catch (err) {
-    console.error('Failed to parse watchers file:', err);
-    return [];
-  }
-}
-
-function writeWatcherFile(data) {
-  fs.writeFileSync(WATCHERS_FILE, JSON.stringify(data, null, 2));
-}
-
-async function loadWatchers() {
-  const saved = readWatcherFile();
-
-  for (const watcher of saved) {
-    try {
-      const channel = await client.channels.fetch(watcher.channelId);
-      watchers.set(watcher.channelId, watchQueue({ channel: channel, role: watcher.role, countThreshold: watcher.countThreshold, delay: watcher.delay, everyone: watcher.everyone }));
-    } catch (err) {
-      console.error(`Failed to restore watcher for ${watcher.channelId}`, err);
-    }
-  }
-}
-
+let savedWatchers = readWatcherFile();
+let savedDefaults = readDefaultsFile();
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -67,11 +34,6 @@ async function loadWatchers() {
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   // Interaction id, type and data
   const { id, type, data } = req.body;
-
-  let everyone = null;
-
-  if (req.body.guild)
-    everyone = req.body.guild.id;
 
   /**
    * Handle verification requests
@@ -85,131 +47,136 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
    * See https://discord.com/developers/docs/interactions/application-commands#slash-commands
    */
   if (type === InteractionType.APPLICATION_COMMAND) {
-    const { name } = data;
+    const { name, options } = data;
+
+    // "default" command
+    if (name === 'default') {
+      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
+
+      const subcommand = options[0];
+
+      const mode = subcommand.name;
+      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+
+      const modeObject = modesMap.get(mode);
+      const gameObject = gamesMap.get(mode).get(game);
+      
+      const scopeId = req.body.guild_id || req.body.channel_id;
+      let scopeDefaults = defaults.get(scopeId);
+      
+      let entry = savedDefaults.find(e => e.scopeId === scopeId);
+
+      if (!game) {
+        if (scopeDefaults) {
+          scopeDefaults.delete(mode);
+
+          delete entry.modes[mode];
+
+          if (Object.keys(entry.modes).length === 0) savedDefaults.splice(savedDefaults.indexOf(entry), 1);
+
+          writeDefaultsFile(savedDefaults);
+        }
+
+        return res.send(DEFAULT_RESET(modeObject.name));
+      }
+
+      if (!gameObject) return res.send(INVALID_GAME);
+
+      if (!scopeDefaults) {
+        scopeDefaults = new Map();
+        defaults.set(scopeId, scopeDefaults);
+
+        entry = { scopeId, modes: {} };
+        savedDefaults.push(entry);
+      }
+
+      scopeDefaults.set(mode, game);
+
+      entry.modes[mode] = game;
+
+      writeDefaultsFile(savedDefaults);
+
+      return res.send(DEFAULT_SET(modeObject.name, gameObject.name));
+    }
 
     // "check" command
     if (name === 'check') {
-      const games = await getCachedGameCounts();
-      const count = games.ARCADE.modes.FARM_HUNT;
+      const subcommand = options[0];
 
-      // Send a message into the channel where command was triggered from
+      const mode = subcommand.name;
+      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+
+      const modeObject = modesMap.get(mode);
+
+      if (!game) return res.send(NO_GAME_SELECTED(modeObject.name));
+
+      const gameObject = gamesMap.get(mode).get(game);
+
+      if (!gameObject) return res.send(INVALID_GAME);
+
+      const count = getCachedGameCount(modeObject.api, gameObject.api);
+
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          embeds: [
-            {
-              title: `Farm Hunt is ` + (count < 11 ? `not ` : ``) + `queueing!`,
-              fields: [
-                { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
-              ],
-              color: 0x5a9d12
-            }
-          ]
-        }
+        data: queueMessage(null, false, gameObject, count)
       });
     }
 
     // "watch" command
     if (name === 'watch') {
-      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) {
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            embeds: [
-              {
-                title: `Permission denied!`,
-                description: `You do not have permission to use this command.`,
-                color: 0x55535d
-              }
-            ],
-            flags: InteractionResponseFlags.EPHEMERAL
-          }
-        });
-      }
-      
-      if (watchers.get(req.body.channel_id)) {
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            embeds: [
-              {
-                title: `Channel in use!`,
-                description: `This channel is already being used to watch queues.`,
-                color: 0x55535d
-              }
-            ]
-          }
-        });
-      }
+      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
 
-      const role = data.options?.find(o => o.name === 'role')?.value;
-      const countThreshold = data.options?.find(o => o.name === 'count')?.value || 11;
-      const delay = data.options?.find(o => o.name === 'delay')?.value || 5;
+      if (watchers.get(req.body.channel_id)) return res.send(CHANNEL_IN_USE);
+
+      const subcommand = options[0];
+
+      const mode = subcommand.name;
+      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+
+      if (!game) return res.send(NO_GAME_SELECTED(modesMap.get(mode).name));
+
+      const gameObject = gamesMap.get(mode).get(game);
+
+      if (!gameObject) return res.send(INVALID_GAME);
+      
+      const role = subcommand.options?.find(o => o.name === 'role')?.value;
+      const countThreshold = subcommand.options?.find(o => o.name === 'count')?.value || gameObject.count;
+      const delay = subcommand.options?.find(o => o.name === 'delay')?.value || 5;
+
+      const everyone = role === req.body.guild?.id;
 
       const channel = await client.channels.fetch(req.body.channel_id);
 
-      watchers.set(req.body.channel_id, watchQueue({ channel: channel, role, countThreshold, delay, everyone }));
-      const saved = readWatcherFile();
-      if (!saved.some(watcher => watcher.channelId === req.body.channel_id)) {
-        saved.push({ channelId: req.body.channel_id, role, countThreshold, delay, everyone });
-        writeWatcherFile(saved);
-      }
-
-      // Send a message into the channel where command was triggered from
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          embeds: [
-            {
-              title: `Started watching the queues for Farm Hunt!`,
-              description: `Notifications will be sent ` + (role ? (role === everyone ? `to @everyone ` : `to <@&${role}> `) : ``) + `when the player count reaches ${countThreshold}.`,
-              color: 0xb97374
-            }
-          ]
-        }
+      watchers.set(req.body.channel_id, {
+        mode,
+        game,
+        interval: watchQueue(channel, mode, game, role, everyone, countThreshold, delay)
       });
+
+      savedWatchers.push({ channelId: req.body.channel_id, mode, game, role, everyone, countThreshold, delay });
+      writeWatcherFile(savedWatchers);
+
+      return res.send(STARTED_WATCHING(gameObject.name, role, everyone, countThreshold));
     }
 
     // "unwatch" command
     if (name === 'unwatch') {
-      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) {
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            embeds: [
-              {
-                title: `Permission denied!`,
-                description: `You do not have permission to use this command.`,
-                color: 0x55535d
-              }
-            ],
-            flags: InteractionResponseFlags.EPHEMERAL
-          }
-        });
-      }
+      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
 
       const watcher = watchers.get(req.body.channel_id);
 
       if (watcher) {
-        clearInterval(watcher);
+        clearInterval(watcher.interval);
+        
         watchers.delete(req.body.channel_id);
 
-        const saved = readWatcherFile().filter(watcher => watcher.channelId !== req.body.channel_id);
-        writeWatcherFile(saved);
+        savedWatchers = savedWatchers.filter(w => w.channelId !== req.body.channel_id);
+        writeWatcherFile(savedWatchers);
+
+        return res.send(STOPPED_WATCHING(gamesMap.get(watcher.mode).get(watcher.game).name));
       }
 
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          embeds: [
-            {
-              title: `Stopped watching the queues for Farm Hunt!`,
-              description: `Notifications will no longer be sent.`,
-              color: 0xb97374
-            }
-          ]
-        }
-      });
+      return res.send(CHANNEL_NOT_IN_USE);
     }
 
     console.error(`unknown command: ${name}`);

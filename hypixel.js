@@ -33,6 +33,6 @@ async function getGameCounts() {
   return data.games;
 }
 
-export function getCachedGameCounts() {
-    return games;
+export function getCachedGameCount(mode, game) {
+    return games?.[mode]?.modes?.[game] || 0;
 }

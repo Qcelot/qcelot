@@ -1,6 +1,11 @@
-import { getCachedGameCounts } from "./hypixel.js";
+import { getCachedGameCount } from "./hypixel.js";
+import { modesMap, gamesMap } from './data.js';
+import { queueMessage } from './messages.js';
 
-export function watchQueue({ channel, role, countThreshold, delay, everyone }) {
+export function watchQueue(channel, mode, game, role, everyone, countThreshold, delay) {
+  const modeObject = modesMap.get(mode);
+  const gameObject = gamesMap.get(mode).get(game);
+
   let ticks = 0;
   let queued = true;
   let running = false;
@@ -10,8 +15,7 @@ export function watchQueue({ channel, role, countThreshold, delay, everyone }) {
     running = true;
 
     try {
-      const games = await getCachedGameCounts();
-      const count = games.ARCADE.modes.FARM_HUNT;
+      const count = getCachedGameCount(modeObject.api, gameObject.api);
 
       if (queued) {
         if (count < countThreshold) ticks++;
@@ -27,18 +31,7 @@ export function watchQueue({ channel, role, countThreshold, delay, everyone }) {
         else ticks = 20;
 
         if (ticks <= 0) {
-          await channel.send({
-            content: role ? (role === everyone ? `@everyone` : `<@&${role}>`) : ` `,
-            embeds: [
-              {
-                title: `Farm Hunt is ` + (count < 11 ? `not ` : ``) + `queueing!`,
-                fields: [
-                  { name: `Count`, value: `${count} players`, inline: true }
-                ],
-                color: 0x5a9d12
-              }
-            ]
-          });
+          await channel.send(queueMessage(role, everyone, gameObject, count));
 
           ticks = 0;
           queued = true;
