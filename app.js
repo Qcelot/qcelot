@@ -3,7 +3,7 @@ import express from 'express';
 import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'discord-interactions';
 import { watchQueue } from './watch.js';
 import { getCachedGameCount } from "./hypixel.js";
-import { modesMap, gamesMap } from './data.js';
+import { modesMap, games, gamesMap } from './data.js';
 import { watchers, defaults, readWatcherFile, writeWatcherFile, loadWatchers, readDefaultsFile, writeDefaultsFile, loadDefaults } from './state.js';
 import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 
@@ -40,6 +40,32 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
    */
   if (type === InteractionType.PING) {
     return res.send({ type: InteractionResponseType.PONG });
+  }
+
+  if (type === InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE) {
+    const subcommand = data.options[0];
+
+    const focusedOption = subcommand.options?.find(option => option.focused);
+
+    if (!subcommand || !focusedOption) {
+      return res.send({
+        type: InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
+        data: { choices: [] }
+      });
+    }
+
+    const userInput = focusedOption.value.toLowerCase();
+
+    const modeGames = games[subcommand.name] || [];
+
+    const filtered = modeGames.filter(game => game.name.toLowerCase().includes(userInput)).slice(0, 25).map(game => ({ name: game.name, value: game.name }));
+
+    return res.send({
+      type: InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
+      data: {
+        choices: filtered
+      }
+    });
   }
 
   /**

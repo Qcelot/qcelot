@@ -11,10 +11,7 @@ function createModeSubcommands(globalOptions, descriptionPrefix, descriptionSuff
       name: 'game',
       description: gameDescription,
       required: false,
-      choices: games[mode].map(({ name }) => ({
-        name,
-        value: name
-      })),
+      autocomplete: true,
     });
 
     options.push(...globalOptions);
