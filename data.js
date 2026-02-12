@@ -183,5 +183,5 @@ export const games = {
 
 export const gamesMap = new Map();
 
-for (const [mode, games] of Object.entries(games))
-    gamesMap.set(mode, new Map(games.map(game => [game.name, game])));
+for (const [mode, modeGames] of Object.entries(games))
+    gamesMap.set(mode, new Map(modeGames.map(game => [game.name, game])));
