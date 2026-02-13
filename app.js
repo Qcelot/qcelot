@@ -111,12 +111,14 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       if (!scopeDefaults) {
         scopeDefaults = new Map();
         defaults.set(scopeId, scopeDefaults);
-
-        entry = { scopeId, modes: {} };
-        savedDefaults.push(entry);
       }
 
       scopeDefaults.set(mode, game);
+
+      if (!entry) {
+        entry = { scopeId, modes: {} };
+        savedDefaults.push(entry);
+      }
 
       entry.modes[mode] = game;
 
