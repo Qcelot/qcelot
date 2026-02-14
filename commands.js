@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { InstallGlobalCommands } from './utils.js';
 import { modes } from './data.js';
 
-function createModeSubcommands(globalOptions, default_member_permissions, integration_types, contexts, descriptionPrefix, descriptionSuffix, gameDescription) {
+function createModeSubcommands(globalOptions, default_member_permissions, contexts, descriptionPrefix, descriptionSuffix, gameDescription) {
   return modes.map(({ mode, name }) => {
     const options = [];
 
@@ -22,7 +22,7 @@ function createModeSubcommands(globalOptions, default_member_permissions, integr
       description: descriptionPrefix + name + descriptionSuffix,
       options: options,
       default_member_permissions: default_member_permissions,
-      integration_types: integration_types,
+      integration_types: [0, 1],
       contexts: contexts,
     };
   });
@@ -31,13 +31,13 @@ function createModeSubcommands(globalOptions, default_member_permissions, integr
 const DEFAULT_COMMAND = {
   name: 'default',
   description: 'Set a default game',
-  options: createModeSubcommands([], (1n << 5n).toString(), [0], [0, 1], `Set a default game for `, ``, `Game to set as default`),
+  options: createModeSubcommands([], (1n << 5n).toString(), [0, 1], `Set a default game for `, ``, `Game to set as default`),
 };
 
 const CHECK_COMMAND = {
   name: 'check',
   description: 'Check the current player count',
-  options: createModeSubcommands([], null, [0, 1], [0, 1, 2], `Check the current player counts for `, ``, `Game to check`),
+  options: createModeSubcommands([], null, [0, 1, 2], `Check the current player counts for `, ``, `Game to check`),
 };
 
 const WATCH_COMMAND = {
@@ -62,7 +62,7 @@ const WATCH_COMMAND = {
       description: 'Delay before attempting to send another notification (in minutes)',
       required: false
     },
-  ], (1n << 5n).toString(), [0], [0, 1], `Track the player counts for `, ` and receive notifications when a game queues`, `Game to track`),
+  ], (1n << 5n).toString(), [0, 1], `Track the player counts for `, ` and receive notifications when a game queues`, `Game to track`),
 };
 
 const UNWATCH_COMMAND = {
@@ -70,7 +70,7 @@ const UNWATCH_COMMAND = {
   description: 'Stop tracking the player counts',
   type: 1,
   default_member_permissions: (1n << 5n).toString(),
-  integration_types: [0],
+  integration_types: [0, 1],
   contexts: [0, 1],
 };
 
