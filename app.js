@@ -4,7 +4,7 @@ import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'd
 import { watchQueue } from './watch.js';
 import { getCachedGameCount } from "./hypixel.js";
 import { modesMap, games, gamesMap } from './data.js';
-import { watchers, defaults, addWatcher, removeWatcher, loadWatchers, addDefault, removeDefault, loadDefaults } from './state.js';
+import { watchers, defaults, addWatcher, removeWatcher, loadWatchers, addDefault, removeDefault, loadDefaults } from './config.js';
 import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 
 // Create an express app
