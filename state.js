@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 
 import { watchQueue } from './watch.js';
 
-const database = new Database('saved.db');
+const database = new Database('state.db');
 
 database.exec(`
   CREATE TABLE IF NOT EXISTS defaults (
