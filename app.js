@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 import pkg from 'discord.js';
 const { Client, GatewayIntentBits } = pkg;
-const client = new Client({ intents: [ 'GUILDS', 'GUILD_MESSAGES' ] });
+const client = new Client({ intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages ] });
 
 client.login(process.env.DISCORD_TOKEN);
 
