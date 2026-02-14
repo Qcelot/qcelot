@@ -2,6 +2,9 @@ import Database from 'better-sqlite3';
 
 import { watchQueue } from './watch.js';
 
+const defaults = new Map();
+const watchers = new Map();
+
 const database = new Database('state.db');
 
 database.exec(`
@@ -22,9 +25,6 @@ database.exec(`
   );
 `);
 
-export const defaults = new Map();
-export const watchers = new Map();
-
 export function addDefault(scopeId, mode, game) {
   if (!defaults.has(scopeId)) defaults.set(scopeId, new Map());
   defaults.get(scopeId).set(mode, game);
@@ -39,6 +39,10 @@ export function removeDefault(scopeId, mode) {
   defaults.get(scopeId)?.delete(mode);
 
   database.prepare('DELETE FROM defaults WHERE scopeId = ? AND mode = ?').run(scopeId, mode);
+}
+
+export function getDefault(scopeId, mode) {
+  return defaults.get(scopeId)?.get(mode);
 }
 
 export async function loadDefaults() {
@@ -71,6 +75,10 @@ export function removeWatcher(channelId) {
   }
 
   database.prepare('DELETE FROM watchers WHERE channelId = ?').run(channelId);
+}
+
+export function getWatcher(channelId) {
+  return watchers.get(channelId);
 }
 
 export async function loadWatchers() {

@@ -5,7 +5,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 
 import { modesMap, games, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
-import { watchers, defaults, addWatcher, removeWatcher, loadWatchers, addDefault, removeDefault, loadDefaults } from './state.js';
+import { addDefault, removeDefault, getDefault, loadDefaults, addWatcher, removeWatcher, getWatcher, loadWatchers } from './state.js';
 import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 
 // Create an express app
@@ -104,7 +104,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const subcommand = options[0];
 
       const mode = subcommand.name;
-      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+      const game = subcommand.options?.find(o => o.name === 'game')?.value || getDefault(req.body.guild_id || req.body.channel_id, mode);
 
       const modeObject = modesMap.get(mode);
 
@@ -126,12 +126,12 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     if (name === 'watch') {
       if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
 
-      if (watchers.has(req.body.channel_id)) return res.send(CHANNEL_IN_USE);
+      if (getWatcher(req.body.channel_id)) return res.send(CHANNEL_IN_USE);
 
       const subcommand = options[0];
 
       const mode = subcommand.name;
-      const game = subcommand.options?.find(o => o.name === 'game')?.value || defaults.get(req.body.guild_id || req.body.channel_id)?.get(mode);
+      const game = subcommand.options?.find(o => o.name === 'game')?.value || getDefault(req.body.guild_id || req.body.channel_id, mode);
 
       if (!game) return res.send(NO_GAME_SELECTED(modesMap.get(mode).name));
 
@@ -154,7 +154,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     if (name === 'unwatch') {
       if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
 
-      const watcher = watchers.get(req.body.channel_id);
+      const watcher = getWatcher(req.body.channel_id);
 
       if (!watcher) return res.send(CHANNEL_NOT_IN_USE);
 
