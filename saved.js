@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 
 import { watchQueue } from './watch.js';
 
-const database = new Database('config.db');
+const database = new Database('saved.db');
 
 database.exec(`
   CREATE TABLE IF NOT EXISTS defaults (
@@ -58,12 +58,10 @@ export function removeWatcher(channelId) {
   database.prepare('DELETE FROM watchers WHERE channelId = ?').run(channelId);
 }
 
-export async function loadWatchers(client) {
+export async function loadWatchers() {
   for (const row of database.prepare('SELECT * FROM watchers').all()) {
     try {
-      const channel = await client.channels.fetch(row.channelId);
-
-      watchers.set(row.channelId, { game: row.game, interval: watchQueue(channel, row.mode, row.game, row.role, row.everyone, row.countThreshold, row.delay) });
+      watchers.set(row.channelId, { game: row.game, interval: watchQueue(row.channelId, row.mode, row.game, row.role, row.everyone, row.countThreshold, row.delay) });
     } catch (err) {
       console.error(`Failed to restore watcher for ${row.channelId}`, err);
     }

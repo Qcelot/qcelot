@@ -1,8 +1,9 @@
-import { getCachedGameCount } from "./hypixel.js";
 import { modesMap, gamesMap } from './data.js';
+import { getCachedGameCount } from "./hypixel.js";
 import { queueMessage } from './messages.js';
+import { DiscordRequest } from "./utils.js";
 
-export function watchQueue(channel, mode, game, role, everyone, countThreshold, delay) {
+export function watchQueue(channelId, mode, game, role, everyone, countThreshold, delay) {
   const modeObject = modesMap.get(mode);
   const gameObject = gamesMap.get(mode).get(game);
 
@@ -31,7 +32,10 @@ export function watchQueue(channel, mode, game, role, everyone, countThreshold, 
         else ticks = 20;
 
         if (ticks <= 0) {
-          await channel.send(queueMessage(role, everyone, gameObject, count));
+          await DiscordRequest(`channels/${channelId}/messages`, {
+            method: 'POST',
+            body: queueMessage(role, everyone, gameObject, count)
+          });
 
           ticks = 0;
           queued = true;

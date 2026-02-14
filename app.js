@@ -1,28 +1,29 @@
 import 'dotenv/config';
 import express from 'express';
 import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'discord-interactions';
-import { watchQueue } from './watch.js';
-import { getCachedGameCount } from "./hypixel.js";
+import { Client, GatewayIntentBits } from 'discord.js';
+
 import { modesMap, games, gamesMap } from './data.js';
-import { watchers, defaults, addWatcher, removeWatcher, loadWatchers, addDefault, removeDefault, loadDefaults } from './config.js';
+import { getCachedGameCount } from "./hypixel.js";
+import { watchers, defaults, addWatcher, removeWatcher, loadWatchers, addDefault, removeDefault, loadDefaults } from './saved.js';
 import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
+import { watchQueue } from './watch.js';
 
 // Create an express app
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
 
-import pkg from 'discord.js';
-const { Client, GatewayIntentBits } = pkg;
-const client = new Client({ intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages ] });
+const client = new Client({ intents: [ GatewayIntentBits.Guilds ] });
 
 client.login(process.env.DISCORD_TOKEN);
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   client.user.setPresence({ status: 'invisible' });
-  await loadWatchers(client);
-  await loadDefaults();
 });
+
+await loadWatchers();
+await loadDefaults();
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -30,7 +31,7 @@ client.once('ready', async () => {
  */
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   // Interaction id, type and data
-  const { id, type, data } = req.body;
+  const { type, data } = req.body;
 
   /**
    * Handle verification requests
@@ -157,9 +158,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       const everyone = role === req.body.guild?.id;
 
-      const channel = await client.channels.fetch(req.body.channel_id);
-
-      watchers.set(req.body.channel_id, { game, interval: watchQueue(channel, mode, game, role, everyone, countThreshold, delay) });
+      watchers.set(req.body.channel_id, { game, interval: watchQueue(req.body.channel_id, mode, game, role, everyone, countThreshold, delay) });
 
       addWatcher(req.body.channel_id, mode, game, role, everyone, countThreshold, delay);
 
