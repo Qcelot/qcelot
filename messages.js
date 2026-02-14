@@ -31,7 +31,6 @@ function errorMessage(title, description) {
   };
 }
 
-export const PERMISSION_DENIED = errorMessage(`Permission denied`, `You do not have permission to use this command.`);
 export const CHANNEL_IN_USE = errorMessage(`Channel in use`, `This channel is already being used to watch a game.`);
 export const CHANNEL_NOT_IN_USE = errorMessage(`Channel not in use`, `This channel is not being used to watch a game.`);
 export const INVALID_GAME = errorMessage(`Invalid game`, `The selected game is not valid.`);

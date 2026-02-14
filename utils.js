@@ -10,7 +10,7 @@ export async function DiscordRequest(endpoint, options) {
     headers: {
       Authorization: `Bot ${process.env.DISCORD_TOKEN}`,
       'Content-Type': 'application/json; charset=UTF-8',
-      'User-Agent': 'Qcelot (https://github.com/underscoreadot/qcelot)',
+      'User-Agent': 'Qcelot',
     },
     ...options
   });

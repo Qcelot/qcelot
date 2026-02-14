@@ -6,7 +6,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { modesMap, games, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
 import { addDefault, removeDefault, getDefault, loadDefaults, addWatcher, removeWatcher, getWatcher, loadWatchers } from './state.js';
-import { queueMessage, PERMISSION_DENIED, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
+import { queueMessage, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 
 // Create an express app
 const app = express();
@@ -74,8 +74,6 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     // "default" command
     if (name === 'default') {
-      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
-
       const subcommand = options[0];
 
       const mode = subcommand.name;
@@ -124,8 +122,6 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     // "watch" command
     if (name === 'watch') {
-      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
-
       if (getWatcher(req.body.channel_id)) return res.send(CHANNEL_IN_USE);
 
       const subcommand = options[0];
@@ -152,8 +148,6 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     // "unwatch" command
     if (name === 'unwatch') {
-      if (req.body.member && !(BigInt(req.body.member.permissions) & 1n << 5n)) return res.send(PERMISSION_DENIED);
-
       const watcher = getWatcher(req.body.channel_id);
 
       if (!watcher) return res.send(CHANNEL_NOT_IN_USE);

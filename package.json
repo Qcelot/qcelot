@@ -1,7 +1,7 @@
 {
   "name": "qcelot",
   "private": true,
-  "description": "A queue tracker and notifier for games on the Hypixel network!",
+  "description": "A Discord queue tracker and notifier for games on the Hypixel network!",
   "main": "app.js",
   "type": "module",
   "engines": {
@@ -12,8 +12,6 @@
     "register": "node commands.js",
     "dev": "nodemon app.js"
   },
-  "author": "_adot",
-  "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "discord-interactions": "^4.0.0",
