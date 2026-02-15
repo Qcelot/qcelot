@@ -3,7 +3,7 @@ A Discord queue tracker and notifier for games on the Hypixel network!
 
 ## Features
 * Check the current player count for most games
-* Track the player count for a game and receive notifications when the count reaches a threshold
+* Track the player count for a game and receive notifications when it reaches a threshold
 * Set default games on a per server and per mode basis
 
 ## Installation
