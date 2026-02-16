@@ -9,7 +9,7 @@ export function queueMessage(role, everyone, gameObject, count) {
         fields: [
           { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
         ],
-        color: (count < gameObject.count ? 0x99aab5 : 0x57f287)
+        color: (count < gameObject.count ? 0x6b7280 : 0x16a34a)
       }
     ]
   };
@@ -23,7 +23,7 @@ function errorMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xed4245
+          color: 0xdc2626
         }
       ],
       flags: InteractionResponseFlags.EPHEMERAL
@@ -44,7 +44,7 @@ function watchMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xfee75c
+          color: 0xca8a04
         }
       ]
     }
@@ -62,7 +62,7 @@ function defaultMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xeb459e
+          color: 0xdb2777
         }
       ]
     }
