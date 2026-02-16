@@ -78,12 +78,12 @@ function defaultMessage(title, description) {
         {
           title: title,
           description: description,
-          thumbnail: { url: `attachment://book_writable.png` },
+          thumbnail: { url: `attachment://comparator.png` },
           color: 0xbf7373
         }
       ]
     }
-  }, `./assets/icons/book_writable.png`, `book_writable.png`);
+  }, `./assets/icons/comparator.png`, `comparator.png`);
 }
 
 export const DEFAULT_SET = (mode, game) => defaultMessage(`Default set for ${mode}`, `The default game for **${mode}** has been set to **${game}**.`);
