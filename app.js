@@ -143,7 +143,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       addWatcher(req.body.channel_id, mode, game, role, everyone, countThreshold, delay);
 
-      return await sendFormData(res, STARTED_WATCHING(gameObject.name, countThreshold));
+      return await sendFormData(res, STARTED_WATCHING(gameObject.name, countThreshold, delay));
     }
 
     // "unwatch" command
