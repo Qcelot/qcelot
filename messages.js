@@ -3,14 +3,13 @@ import { InteractionResponseFlags, InteractionResponseType } from 'discord-inter
 export function queueMessage(role, everyone, gameObject, count) {
   return {
     content: role ? (everyone ? `@everyone` : `<@&${role}>`) : undefined,
-    files: [{ attachment: `${import.meta.dirname}/assets/icons/${gameObject.icon}.png`, name: `${gameObject.icon}.png` }],
     embeds: [
       {
         title: `${gameObject.name} is ` + (count < gameObject.count ? `not ` : ``) + `queueing`,
         fields: [
           { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
         ],
-        thumbnail: { url: `attachment://${gameObject.icon}.png` },
+        thumbnail: { url: `https://raw.githubusercontent.com/Qcelot/qcelot/main/assets/icons/${gameObject.icon}.png` },
         color: (count < gameObject.count ? 0x99aab5 : 0x57f287)
       }
     ]
@@ -21,12 +20,11 @@ function errorMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `${import.meta.dirname}/assets/icons/barrier.png`, name: `barrier.png` }],
       embeds: [
         {
           title: title,
           description: description,
-          thumbnail: { url: `attachment://barrier.png` },
+          thumbnail: { url: `https://raw.githubusercontent.com/Qcelot/qcelot/main/assets/icons/barrier.png` },
           color: 0xed4245
         }
       ],
@@ -44,12 +42,11 @@ function watchMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `${import.meta.dirname}/assets/icons/clock.png`, name: `clock.png` }],
       embeds: [
         {
           title: title,
           description: description,
-          thumbnail: { url: `attachment://clock.png` },
+          thumbnail: { url: `https://raw.githubusercontent.com/Qcelot/qcelot/main/assets/icons/clock.png` },
           color: 0xfee75c
         }
       ]
@@ -64,12 +61,11 @@ function defaultMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `${import.meta.dirname}/assets/icons/book_writable.png`, name: `book_writable.png` }],
       embeds: [
         {
           title: title,
           description: description,
-          thumbnail: { url: `attachment://book_writable.png` },
+          thumbnail: { url: `https://raw.githubusercontent.com/Qcelot/qcelot/main/assets/icons/book_writable.png` },
           color: 0xeb459e
         }
       ]
