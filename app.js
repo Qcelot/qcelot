@@ -88,14 +88,14 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       if (!game) {
         removeDefault(scopeId, mode);
 
-        return await sendFormData(res, DEFAULT_RESET(modeObject.name));
+        return await sendFormData(res, DEFAULT_RESET(modeObject));
       }
 
       if (!gameObject) return await sendFormData(res, INVALID_GAME(game));
 
       addDefault(scopeId, mode, game);
 
-      return await sendFormData(res, DEFAULT_SET(modeObject.name, gameObject.name));
+      return await sendFormData(res, DEFAULT_SET(modeObject, gameObject.name));
     }
 
     // "check" command
