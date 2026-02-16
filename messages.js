@@ -9,7 +9,7 @@ export function queueMessage(role, everyone, gameObject, count) {
         fields: [
           { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
         ],
-        color: (count < gameObject.count ? 0x6b7280 : 0x16a34a)
+        color: (count < gameObject.count ? 0x6b7280 : 0x22c55e)
       }
     ]
   };
@@ -44,7 +44,7 @@ function watchMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xca8a04
+          color: 0xeab308
         }
       ]
     }
