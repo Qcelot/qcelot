@@ -3,7 +3,7 @@ import { InteractionResponseFlags, InteractionResponseType } from 'discord-inter
 export function queueMessage(role, everyone, gameObject, count) {
   return {
     content: role ? (everyone ? `@everyone` : `<@&${role}>`) : undefined,
-    files: [{ attachment: `assets/icons/${gameObject.icon}.png`, name: `${gameObject.icon}.png` }],
+    files: [{ attachment: `${import.meta.dirname}/assets/icons/${gameObject.icon}.png`, name: `${gameObject.icon}.png` }],
     embeds: [
       {
         title: `${gameObject.name} is ` + (count < gameObject.count ? `not ` : ``) + `queueing`,
@@ -21,7 +21,7 @@ function errorMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `assets/icons/barrier.png`, name: `barrier.png` }],
+      files: [{ attachment: `${import.meta.dirname}/assets/icons/barrier.png`, name: `barrier.png` }],
       embeds: [
         {
           title: title,
@@ -44,7 +44,7 @@ function watchMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `assets/icons/clock.png`, name: `clock.png` }],
+      files: [{ attachment: `${import.meta.dirname}/assets/icons/clock.png`, name: `clock.png` }],
       embeds: [
         {
           title: title,
@@ -64,7 +64,7 @@ function defaultMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      files: [{ attachment: `assets/icons/book_writable.png`, name: `book_writable.png` }],
+      files: [{ attachment: `${import.meta.dirname}/assets/icons/book_writable.png`, name: `book_writable.png` }],
       embeds: [
         {
           title: title,
