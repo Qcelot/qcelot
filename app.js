@@ -90,7 +90,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
         return res.send(DEFAULT_RESET(modeObject.name));
       }
 
-      if (!gameObject) return res.send(INVALID_GAME);
+      if (!gameObject) return res.send(INVALID_GAME(game));
 
       addDefault(scopeId, mode, game);
 
@@ -110,7 +110,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       const gameObject = gamesMap.get(mode).get(game);
 
-      if (!gameObject) return res.send(INVALID_GAME);
+      if (!gameObject) return res.send(INVALID_GAME(game));
 
       const count = getCachedGameCount(modeObject.api, gameObject.api);
 
@@ -122,7 +122,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     // "watch" command
     if (name === 'watch') {
-      if (getWatcher(req.body.channel_id)) return res.send(CHANNEL_IN_USE);
+      const watcher = getWatcher(req.body.channel_id)
+
+      if (watcher) return res.send(CHANNEL_IN_USE(watcher.game));
 
       const subcommand = options[0];
 
@@ -133,7 +135,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       const gameObject = gamesMap.get(mode).get(game);
 
-      if (!gameObject) return res.send(INVALID_GAME);
+      if (!gameObject) return res.send(INVALID_GAME(game));
       
       const role = subcommand.options?.find(o => o.name === 'role')?.value;
       const countThreshold = subcommand.options?.find(o => o.name === 'count')?.value || gameObject.count;
@@ -143,7 +145,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       addWatcher(req.body.channel_id, mode, game, role, everyone, countThreshold, delay);
 
-      return res.send(STARTED_WATCHING(gameObject.name, role, everyone, countThreshold));
+      return res.send(STARTED_WATCHING(gameObject.name, countThreshold));
     }
 
     // "unwatch" command

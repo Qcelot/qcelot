@@ -3,13 +3,15 @@ import { InteractionResponseFlags, InteractionResponseType } from 'discord-inter
 export function queueMessage(role, everyone, gameObject, count) {
   return {
     content: role ? (everyone ? `@everyone` : `<@&${role}>`) : undefined,
+    files: [{ attachment: `./assets/icons/${gameObject.icon}.png`, name: `${gameObject.icon}.png` }],
     embeds: [
       {
         title: `${gameObject.name} is ` + (count < gameObject.count ? `not ` : ``) + `queueing`,
         fields: [
           { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
         ],
-        color: 0x5a9d12
+        thumbnail: { url: `attachment://${gameObject.icon}.png` },
+        color: (count < gameObject.count ? 0x99aab5 : 0x57f287)
       }
     ]
   };
@@ -19,11 +21,13 @@ function errorMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
+      files: [{ attachment: `./assets/icons/barrier.png`, name: `barrier.png` }],
       embeds: [
         {
           title: title,
           description: description,
-          color: 0x55535d
+          thumbnail: { url: `attachment://barrier.png` },
+          color: 0xed4245
         }
       ],
       flags: InteractionResponseFlags.EPHEMERAL
@@ -31,41 +35,47 @@ function errorMessage(title, description) {
   };
 }
 
-export const CHANNEL_IN_USE = errorMessage(`Channel in use`, `This channel is already being used to watch a game.`);
-export const CHANNEL_NOT_IN_USE = errorMessage(`Channel not in use`, `This channel is not being used to watch a game.`);
-export const INVALID_GAME = errorMessage(`Invalid game`, `The selected game is not valid.`);
+export const CHANNEL_IN_USE = (game) => errorMessage(`Channel already in use`, `This channel is already receiving notifications for **${game}**.`);
+export const CHANNEL_NOT_IN_USE = errorMessage(`Channel not in use`, `This channel is not receiving notifications.`);
+export const INVALID_GAME = (game) => errorMessage(`Invalid game`, `**${game}** is not a valid game.`);
+export const NO_GAME_SELECTED = (mode) => errorMessage(`No default set for ${mode}`, `No game was selected and no default is set for **${mode}**.`);
 
-export function NO_GAME_SELECTED(mode) {
-  return errorMessage(`No game selected`, `You did not select a game and there is no default set for ${mode}.`);
-}
-
-function statusMessage(title, description) {
+function watchMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
+      files: [{ attachment: `./assets/icons/clock.png`, name: `clock.png` }],
       embeds: [
         {
           title: title,
           description: description,
-          color: 0xb97374
+          thumbnail: { url: `attachment://clock.png` },
+          color: 0xfee75c
         }
       ]
     }
   };
 }
 
-export function STARTED_WATCHING(game, role, everyone, countThreshold) {
-  return statusMessage(`Started watching the queues for ${game}`, `Notifications will be sent ` + (role ? (everyone ? `to @everyone ` : `to <@&${role}> `) : ``) + `when the player count reaches ${countThreshold}.`);
+export const STARTED_WATCHING = (game, countThreshold) => watchMessage(`Watching ${game}`, `This channel will receive notifications for **${game}** when the player count reaches **${countThreshold}**.`);
+export const STOPPED_WATCHING = (game) => watchMessage(`No longer watching ${game}`, `This channel will no longer receive notifications for **${game}**.`);
+
+function defaultMessage(title, description) {
+  return {
+    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    data: {
+      files: [{ attachment: `./assets/icons/book_writable.png`, name: `book_writable.png` }],
+      embeds: [
+        {
+          title: title,
+          description: description,
+          thumbnail: { url: `attachment://book_writable.png` },
+          color: 0xeb459e
+        }
+      ]
+    }
+  };
 }
 
-export function STOPPED_WATCHING(game) {
-  return statusMessage(`Stopped watching the queues for ${game}`, `Notifications will no longer be sent.`);
-}
-
-export function DEFAULT_SET(mode, game) {
-  return statusMessage(`Default set`, `The default game for ${mode} has been set to ${game}.`);
-}
-
-export function DEFAULT_RESET(mode) {
-  return statusMessage(`Default reset`, `The default game for ${mode} has been reset.`);
-}
+export const DEFAULT_SET = (mode, game) => defaultMessage(`Default set for ${mode}`, `The default game for **${mode}** has been set to **${game}**.`);
+export const DEFAULT_RESET = (mode) => defaultMessage(`Default reset for ${mode}`, `The default game for **${mode}** has been reset.`);
