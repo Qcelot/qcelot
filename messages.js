@@ -9,7 +9,7 @@ export function queueMessage(role, everyone, gameObject, count) {
         fields: [
           { name: `Count`, value: `${count} player` + (count !== 1 ? `s` : ``), inline: true }
         ],
-        color: (count < gameObject.count ? 0x6b7280 : 0x22c55e)
+        color: (count < gameObject.count ? 0xb0b0b0 : 0x5d9d15)
       }
     ]
   };
@@ -23,7 +23,7 @@ function errorMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xdc2626
+          color: 0x565461
         }
       ],
       flags: InteractionResponseFlags.EPHEMERAL
@@ -36,7 +36,7 @@ export const CHANNEL_NOT_IN_USE = errorMessage(`Channel not in use`, `This chann
 export const INVALID_GAME = (game) => errorMessage(`Invalid game`, `**${game}** is not a valid game.`);
 export const NO_GAME_SELECTED = (mode) => errorMessage(`No default set for ${mode}`, `No game was selected and no default is set for **${mode}**.`);
 
-function watchMessage(title, description) {
+function statusMessage(title, description) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
@@ -44,30 +44,14 @@ function watchMessage(title, description) {
         {
           title: title,
           description: description,
-          color: 0xeab308
+          color: 0xbf7373
         }
       ]
     }
   };
 }
 
-export const STARTED_WATCHING = (game, countThreshold) => watchMessage(`Watching ${game}`, `This channel will receive notifications for **${game}** when the player count reaches **${countThreshold}**.`);
-export const STOPPED_WATCHING = (game) => watchMessage(`No longer watching ${game}`, `This channel will no longer receive notifications for **${game}**.`);
-
-function defaultMessage(title, description) {
-  return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      embeds: [
-        {
-          title: title,
-          description: description,
-          color: 0xdb2777
-        }
-      ]
-    }
-  };
-}
-
-export const DEFAULT_SET = (mode, game) => defaultMessage(`Default set for ${mode}`, `The default game for **${mode}** has been set to **${game}**.`);
-export const DEFAULT_RESET = (mode) => defaultMessage(`Default reset for ${mode}`, `The default game for **${mode}** has been reset.`);
+export const STARTED_WATCHING = (game, countThreshold) => statusMessage(`Watching ${game}`, `This channel will receive notifications for **${game}** when the player count reaches **${countThreshold}**.`);
+export const STOPPED_WATCHING = (game) => statusMessage(`No longer watching ${game}`, `This channel will no longer receive notifications for **${game}**.`);
+export const DEFAULT_SET = (mode, game) => statusMessage(`Default set for ${mode}`, `The default game for **${mode}** has been set to **${game}**.`);
+export const DEFAULT_RESET = (mode) => statusMessage(`Default reset for ${mode}`, `The default game for **${mode}** has been reset.`);
