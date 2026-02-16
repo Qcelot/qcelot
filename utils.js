@@ -1,15 +1,32 @@
 import 'dotenv/config';
+import { readFileSync } from 'fs';
+
+export function buildFormData(payload, filePath, fileName) {
+  const form = new FormData();
+
+  form.append('payload_json', JSON.stringify(payload));
+  form.append('files[0]', new Blob([readFileSync(filePath)], { type: 'image/png' }), fileName);
+    
+  return form;
+}
+
+export async function sendFormData(res, form) {
+  const response = new Response(form);
+
+  res.set('Content-Type', response.headers.get('Content-Type'));
+  res.send(Buffer.from(await response.arrayBuffer()));
+}
 
 export async function DiscordRequest(endpoint, options) {
   // append endpoint to root API URL
   const url = 'https://discord.com/api/v10/' + endpoint;
   // Stringify payloads
-  if (options.body) options.body = JSON.stringify(options.body);
+  if (options.body && !(options.body instanceof FormData)) options.body = JSON.stringify(options.body);
   // Use fetch to make requests
   const res = await fetch(url, {
     headers: {
       Authorization: `Bot ${process.env.DISCORD_TOKEN}`,
-      'Content-Type': 'application/json; charset=UTF-8',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json; charset=UTF-8' }),
       'User-Agent': 'Qcelot',
     },
     ...options
