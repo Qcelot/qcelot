@@ -25,6 +25,14 @@ function createModeSubcommands(globalOptions, descriptionPrefix, descriptionSuff
   });
 }
 
+const HELP_COMMAND = {
+  name: 'help',
+  description: 'Show help information',
+  type: 1,
+  integration_types: [0, 1],
+  contexts: [0, 1, 2],
+};
+
 const DEFAULT_COMMAND = {
   name: 'default',
   description: 'Set a default game',

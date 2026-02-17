@@ -6,7 +6,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { modesMap, games, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
 import { addDefault, removeDefault, getDefault, loadDefaults, addWatcher, removeWatcher, getWatcher, loadWatchers } from './state.js';
-import { queueInteractionMessage, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
+import { queueInteractionMessage, HELP, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 import { sendFormData } from "./utils.js";
 
 // Create an express app
@@ -72,6 +72,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
    */
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name, options } = data;
+
+    // "help" command
+    if (name === 'help') return await sendFormData(res, HELP);
 
     // "default" command
     if (name === 'default') {

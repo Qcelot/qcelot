@@ -29,6 +29,20 @@ export function queueInteractionMessage(role, everyone, gameObject, count) {
   }, `./assets/icons/${gameObject.icon}.png`, `${gameObject.icon}.png`);
 }
 
+export const HELP = buildFormData({
+  type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+  data: {
+    embeds: [
+      {
+        title: `Qcelot`,
+        description: `Qcelot monitors player counts for most games on the Hypixel network. Use \`/check\` to view the current count for a game, \`/watch\` and \`/unwatch\` to configure notifications for when a count reaches a certain threshold, and \`/default\` to save a per-server default game for each mode. For additional help and updates, join the [official support server](https://qcelot.github.io/discord).`,
+        thumbnail: { url: `attachment://qcelot.png` },
+        color: 0xeaeae8
+      }
+    ]
+  }
+}, `./assets/qcelot.png`, `qcelot.png`);
+
 function errorMessage(title, description) {
   return buildFormData({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
