@@ -34,5 +34,5 @@ async function getGameCounts() {
 }
 
 export function getCachedGameCount(mode, game) {
-    return games?.[mode]?.modes?.[game] || 0;
+    return games?.[mode]?.modes?.[game] ?? 0;
 }

@@ -60,10 +60,12 @@ function errorMessage(title, description) {
   }, `./assets/icons/barrier.png`, `barrier.png`);
 }
 
+export const USER_BLACKLISTED = errorMessage(`Access denied`, `You are not permitted to use this bot.`);
+export const GUILD_WATCHER_LIMIT = errorMessage(`Server limit reached`, `This server has reached its watch limit of 3 games.`);
 export const CHANNEL_IN_USE = (game) => errorMessage(`Channel already in use`, `This channel is already receiving notifications for **${game}**.`);
 export const CHANNEL_NOT_IN_USE = errorMessage(`Channel not in use`, `This channel is not receiving notifications.`);
 export const INVALID_GAME = (game) => errorMessage(`Invalid game`, `**${game}** is not a valid game.`);
-export const NO_GAME_SELECTED = (mode) => errorMessage(`No default set for ${mode}`, `No game was selected and no default is set for **${mode}**.`);
+export const NO_GAME_SELECTED = (mode) => errorMessage(`No default set for ${mode}`, `No game was specified and no default is set for **${mode}**.`);
 
 function statusMessage(title, description, icon) {
   return buildFormData({

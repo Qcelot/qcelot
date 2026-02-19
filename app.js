@@ -3,10 +3,10 @@ import express from 'express';
 import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'discord-interactions';
 import { Client, GatewayIntentBits } from 'discord.js';
 
-import { modesMap, games, gamesMap } from './data.js';
+import { modesMap, gamesChoices, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
-import { addDefault, removeDefault, getDefault, loadDefaults, addWatcher, removeWatcher, getWatcher, loadWatchers } from './state.js';
-import { queueInteractionMessage, HELP, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
+import { isUserPremium, isUserBlacklisted, addDefault, removeDefault, getDefault, addWatcher, removeWatcher, getWatcher, loadWatchers, getWatcherCount } from './state.js';
+import { queueInteractionMessage, HELP, USER_BLACKLISTED, GUILD_WATCHER_LIMIT, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 import { sendFormData } from "./utils.js";
 
 // Create an express app
@@ -23,7 +23,6 @@ client.once('clientReady', async () => {
 });
 
 await loadWatchers();
-await loadDefaults();
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -31,7 +30,9 @@ await loadDefaults();
  */
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   // Interaction id, type and data
-  const { type, data } = req.body;
+  const { type, data, channel_id, guild_id } = req.body;
+
+  const userId = req.body.member?.user.id ?? req.body.user?.id;
 
   /**
    * Handle verification requests
@@ -39,6 +40,8 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
   if (type === InteractionType.PING) {
     return res.send({ type: InteractionResponseType.PONG });
   }
+
+  if (isUserBlacklisted(userId)) return await sendFormData(res, USER_BLACKLISTED);
 
   if (type === InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE) {
     const subcommand = data.options[0];
@@ -54,14 +57,10 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     const userInput = focusedOption.value.toLowerCase();
 
-    const modeGames = games[subcommand.name] || [];
-
-    const filtered = modeGames.filter(game => game.name.toLowerCase().includes(userInput)).slice(0, 25).map(game => ({ name: game.name, value: game.name }));
-
     return res.send({
       type: InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
       data: {
-        choices: filtered
+        choices: gamesChoices.get(subcommand.name)?.filter(choice => choice.name.toLowerCase().includes(userInput))?.slice(0, 25) ?? []
       }
     });
   }
@@ -86,7 +85,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const modeObject = modesMap.get(mode);
       const gameObject = gamesMap.get(mode).get(game);
       
-      const scopeId = req.body.guild_id || req.body.channel_id;
+      const scopeId = guild_id ?? channel_id;
 
       if (!game) {
         removeDefault(scopeId, mode);
@@ -106,7 +105,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const subcommand = options[0];
 
       const mode = subcommand.name;
-      const game = subcommand.options?.find(o => o.name === 'game')?.value || getDefault(req.body.guild_id || req.body.channel_id, mode);
+      const game = subcommand.options?.find(o => o.name === 'game')?.value ?? getDefault(guild_id ?? channel_id, mode);
 
       const modeObject = modesMap.get(mode);
 
@@ -123,41 +122,43 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
     // "watch" command
     if (name === 'watch') {
-      const watcher = getWatcher(req.body.channel_id)
+      if (guild_id && getWatcherCount(guild_id) >= 3 && !isUserPremium(userId)) return await sendFormData(res, GUILD_WATCHER_LIMIT);
+
+      const watcher = getWatcher(channel_id);
 
       if (watcher) return await sendFormData(res, CHANNEL_IN_USE(watcher.game));
 
       const subcommand = options[0];
 
       const mode = subcommand.name;
-      const game = subcommand.options?.find(o => o.name === 'game')?.value || getDefault(req.body.guild_id || req.body.channel_id, mode);
+      const game = subcommand.options?.find(o => o.name === 'game')?.value ?? getDefault(guild_id ?? channel_id, mode);
 
       if (!game) return await sendFormData(res, NO_GAME_SELECTED(modesMap.get(mode).name));
 
       const gameObject = gamesMap.get(mode).get(game);
 
       if (!gameObject) return await sendFormData(res, INVALID_GAME(game));
-      
+
       const role = subcommand.options?.find(o => o.name === 'role')?.value;
-      const countThreshold = subcommand.options?.find(o => o.name === 'count')?.value || gameObject.count;
-      const delay = subcommand.options?.find(o => o.name === 'delay')?.value || 5;
+      const countThreshold = subcommand.options?.find(o => o.name === 'count')?.value ?? gameObject.count;
+      const delay = subcommand.options?.find(o => o.name === 'delay')?.value ?? 5;
 
-      const everyone = role === req.body.guild?.id;
+      const everyone = role === guild_id;
 
-      addWatcher(req.body.channel_id, mode, game, role, everyone, countThreshold, delay);
+      addWatcher(channel_id, userId, guild_id, mode, game, role, everyone, countThreshold, delay);
 
       return await sendFormData(res, STARTED_WATCHING(gameObject.name, countThreshold, delay));
     }
 
     // "unwatch" command
     if (name === 'unwatch') {
-      const watcher = getWatcher(req.body.channel_id);
+      const watcher = getWatcher(channel_id);
 
       if (!watcher) return await sendFormData(res, CHANNEL_NOT_IN_USE);
 
-      removeWatcher(req.body.channel_id);
+      removeWatcher(channel_id);
 
-      return await sendFormData(res, STOPPED_WATCHING(watcher.game));
+      return await sendFormData(res, STOPPED_WATCHING(gamesMap.get(watcher.mode).get(watcher.game).name));
     }
 
     console.error(`unknown command: ${name}`);

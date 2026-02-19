@@ -19,7 +19,7 @@ export const modes = [
 
 export const modesMap = new Map(modes.map(mode => [mode.mode, mode]));
 
-export const games = {
+const games = {
   arcade: [
     { name: 'Blocking Dead', api: 'DAYONE', icon: 'rotten_flesh', count: 9 },
     { name: 'Bounty Hunters', api: 'ONEINTHEQUIVER', icon: 'bow', count: 6 },
@@ -185,3 +185,8 @@ export const gamesMap = new Map();
 
 for (const [mode, modeGames] of Object.entries(games))
     gamesMap.set(mode, new Map(modeGames.map(game => [game.name, game])));
+
+export const gamesChoices = new Map();
+
+for (const [mode, modeGames] of Object.entries(games))
+    gamesChoices.set(mode, modeGames.map(game => ({ name: game.name, value: game.name })));
