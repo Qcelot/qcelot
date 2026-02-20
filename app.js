@@ -143,7 +143,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const countThreshold = subcommand.options?.find(o => o.name === 'count')?.value ?? gameObject.count;
       const delay = subcommand.options?.find(o => o.name === 'delay')?.value ?? 5;
 
-      const everyone = role === guild_id;
+      const everyone = guild_id && role === guild_id;
 
       addWatcher(channel_id, userId, guild_id, mode, game, role, everyone, countThreshold, delay);
 
