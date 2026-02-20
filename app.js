@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import { InteractionResponseType, InteractionType, verifyKeyMiddleware } from 'discord-interactions';
-import { Client, GatewayIntentBits } from 'discord.js';
 
 import { modesMap, gamesChoices, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
-import { isUserPremium, isUserBlacklisted, addDefault, removeDefault, getDefault, addWatcher, removeWatcher, getWatcher, loadWatchers, getWatcherCount } from './state.js';
+import { isUserPremium, isUserBlacklisted, addDefault, removeDefault, getDefault, addWatcher, removeWatcher, getWatcher, getWatcherGame, getWatcherCount, loadWatchers } from './state.js';
 import { queueInteractionMessage, HELP, USER_BLACKLISTED, GUILD_WATCHER_LIMIT, CHANNEL_IN_USE, CHANNEL_NOT_IN_USE, INVALID_GAME, NO_GAME_SELECTED, STARTED_WATCHING, STOPPED_WATCHING, DEFAULT_SET, DEFAULT_RESET } from './messages.js';
 import { sendFormData } from "./utils.js";
 
@@ -13,14 +12,6 @@ import { sendFormData } from "./utils.js";
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
-
-const client = new Client({ intents: [ GatewayIntentBits.Guilds ] });
-
-client.login(process.env.DISCORD_TOKEN);
-
-client.once('clientReady', async () => {
-  client.user.setPresence({ status: 'invisible' });
-});
 
 await loadWatchers();
 
@@ -124,9 +115,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     if (name === 'watch') {
       if (guild_id && getWatcherCount(guild_id) >= 3 && !isUserPremium(userId)) return await sendFormData(res, GUILD_WATCHER_LIMIT);
 
-      const watcher = getWatcher(channel_id);
+      const watcherGame = getWatcherGame(channel_id);
 
-      if (watcher) return await sendFormData(res, CHANNEL_IN_USE(watcher.game));
+      if (watcherGame) return await sendFormData(res, CHANNEL_IN_USE(gamesMap.get(watcherGame.mode).get(watcherGame.game).name));
 
       const subcommand = options[0];
 
@@ -156,9 +147,11 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       if (!watcher) return await sendFormData(res, CHANNEL_NOT_IN_USE);
 
+      const watcherGame = getWatcherGame(channel_id);
+
       removeWatcher(channel_id);
 
-      return await sendFormData(res, STOPPED_WATCHING(gamesMap.get(watcher.mode).get(watcher.game).name));
+      return await sendFormData(res, STOPPED_WATCHING(gamesMap.get(watcherGame.mode).get(watcherGame.game).name));
     }
 
     console.error(`unknown command: ${name}`);

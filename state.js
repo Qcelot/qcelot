@@ -35,68 +35,62 @@ database.exec(`
   CREATE INDEX IF NOT EXISTS index_watchers_guildId ON watchers(guildId);
 `);
 
-const stmtIsUserPremium = database.prepare('SELECT premium FROM users WHERE userId = ?');
-const stmtIsUserBlacklisted = database.prepare('SELECT blacklisted FROM users WHERE userId = ?');
-const stmtAddDefault = database.prepare(`INSERT OR REPLACE INTO defaults (scopeId, mode, game) VALUES (?, ?, ?)`);
-const stmtRemoveDefault = database.prepare('DELETE FROM defaults WHERE scopeId = ? AND mode = ?');
-const stmtGetDefault = database.prepare('SELECT game FROM defaults WHERE scopeId = ? AND mode = ?');
-const stmtAddWatcher = database.prepare(`INSERT OR REPLACE INTO watchers (channelId, userId, guildId, mode, game, role, everyone, countThreshold, delay) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-const stmtRemoveWatcher = database.prepare('DELETE FROM watchers WHERE channelId = ?');
-const stmtLoadWatchers = database.prepare('SELECT * FROM watchers');
-const stmtGetWatcherCount = database.prepare('SELECT COUNT(*) AS count FROM watchers WHERE guildId = ?');
-
 export function isUserPremium(userId) {
-  return stmtIsUserPremium.get(userId)?.premium === 1;
+  return database.prepare('SELECT premium FROM users WHERE userId = ?').get(userId)?.premium === 1;
 }
 
 export function isUserBlacklisted(userId) {
-  return stmtIsUserBlacklisted.get(userId)?.blacklisted === 1;
+  return database.prepare('SELECT blacklisted FROM users WHERE userId = ?').get(userId)?.blacklisted === 1;
 }
 
 export function addDefault(scopeId, mode, game) {
-  stmtAddDefault.run(scopeId, mode, game);
+  database.prepare(`INSERT OR REPLACE INTO defaults (scopeId, mode, game) VALUES (?, ?, ?)`).run(scopeId, mode, game);
 }
 
 export function removeDefault(scopeId, mode) {
-  stmtRemoveDefault.run(scopeId, mode);
+  database.prepare('DELETE FROM defaults WHERE scopeId = ? AND mode = ?').run(scopeId, mode);
 }
 
 export function getDefault(scopeId, mode) {
-  return stmtGetDefault.get(scopeId, mode)?.game;
+  return database.prepare('SELECT game FROM defaults WHERE scopeId = ? AND mode = ?').get(scopeId, mode)?.game;
 }
 
 export function addWatcher(channelId, userId, guildId, mode, game, role, everyone, countThreshold, delay) {
-  watchers.set(channelId, { mode, game, interval: watchQueue(channelId, mode, game, role, everyone, countThreshold, delay) });
+  watchers.set(channelId, watchQueue(channelId, mode, game, role, everyone, countThreshold, delay));
 
-  stmtAddWatcher.run(channelId, userId, guildId, mode, game, role, everyone ? 1 : 0, countThreshold, delay);
+  database.prepare(`INSERT OR REPLACE INTO watchers (channelId, userId, guildId, mode, game, role, everyone, countThreshold, delay) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(channelId, userId, guildId, mode, game, role, everyone ? 1 : 0, countThreshold, delay);
 }
 
 export function removeWatcher(channelId) {
   const watcher = watchers.get(channelId);
 
   if (watcher) {
-    clearInterval(watcher.interval);
+    clearInterval(watcher);
 
     watchers.delete(channelId);
   }
 
-  stmtRemoveWatcher.run(channelId);
+  database.prepare('DELETE FROM watchers WHERE channelId = ?').run(channelId);
 }
 
 export function getWatcher(channelId) {
   return watchers.get(channelId);
 }
 
+export function getWatcherGame(channelId) {
+  return database.prepare('SELECT mode, game FROM watchers WHERE channelId = ?').get(channelId);
+}
+
+export function getWatcherCount(guildId) {
+  return database.prepare('SELECT COUNT(*) AS count FROM watchers WHERE guildId = ?').get(guildId)?.count ?? 0;
+}
+
 export async function loadWatchers() {
-  for (const row of stmtLoadWatchers.all()) {
+  for (const row of database.prepare('SELECT * FROM watchers').all()) {
     try {
-      watchers.set(row.channelId, { mode: row.mode, game: row.game, interval: watchQueue(row.channelId, row.mode, row.game, row.role, row.everyone === 1, row.countThreshold, row.delay) });
+      watchers.set(row.channelId, watchQueue(row.channelId, row.mode, row.game, row.role, row.everyone === 1, row.countThreshold, row.delay));
     } catch (err) {
       console.error(`Failed to restore watcher for ${row.channelId}`, err);
     }
   }
-}
-
-export function getWatcherCount(guildId) {
-  return stmtGetWatcherCount.get(guildId)?.count ?? 0;
 }

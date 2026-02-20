@@ -17,7 +17,7 @@ export const modes = [
   { mode: `wool`, name: `Wool Games`, api: `WOOL_GAMES`, icon: 'white_wool' }
 ];
 
-export const modesMap = new Map(modes.map(mode => [mode.mode, mode]));
+export const modesMap = new Map(modes.map(mode => [mode.mode, { name: mode.name, api: mode.api, icon: mode.icon }]));
 
 const games = {
   arcade: [
