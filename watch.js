@@ -1,6 +1,7 @@
 import { modesMap, gamesMap } from './data.js';
 import { getCachedGameCount } from "./hypixel.js";
 import { queueMessage } from './messages.js';
+import { removeWatcher } from './state.js';
 import { DiscordRequest } from "./utils.js";
 
 export function watchQueue(channelId, mode, game, role, everyone, countThreshold, delay) {
