@@ -44,7 +44,7 @@ const DEFAULT_COMMAND = {
 
 const CHECK_COMMAND = {
   name: 'check',
-  description: 'Check the current player count',
+  description: 'Check current player counts',
   options: createModeSubcommands([], `Check the current player counts for `, ``, `Game to check`),
   integration_types: [0, 1],
   contexts: [0, 1, 2],
@@ -52,7 +52,7 @@ const CHECK_COMMAND = {
 
 const WATCH_COMMAND = {
   name: 'watch',
-  description: 'Track the player count and receive notifications when a game queues',
+  description: 'Watch player counts and receive automatic notifications',
   options: [
     ...createModeSubcommands([
       {
@@ -75,11 +75,11 @@ const WATCH_COMMAND = {
         description: 'Role to ping',
         required: false
       },
-    ], `Track the player counts for `, ` and receive notifications when a game queues`, `Game to track`),
+    ], `Watch the player counts for `, ` and receive automatic notifications`, `Game to watch`),
     {
       type: 1,
       name: 'stop',
-      description: 'Stop tracking player counts'
+      description: 'Stop watching player counts'
     }
   ],
   default_member_permissions: (1n << 5n).toString(),
