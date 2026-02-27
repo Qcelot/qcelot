@@ -27,7 +27,6 @@ database.exec(`
     mode TEXT NOT NULL,
     game TEXT NOT NULL,
     role TEXT,
-    everyone INTEGER NOT NULL DEFAULT 0,
     countThreshold INTEGER NOT NULL,
     delay INTEGER NOT NULL
   );
@@ -55,10 +54,10 @@ export function getDefault(scopeId, mode) {
   return database.prepare('SELECT game FROM defaults WHERE scopeId = ? AND mode = ?').get(scopeId, mode)?.game;
 }
 
-export function addWatcher(channelId, userId, guildId, mode, game, role, everyone, countThreshold, delay) {
-  watchers.set(channelId, watchQueue(channelId, mode, game, role, everyone, countThreshold, delay));
+export function addWatcher(channelId, userId, guildId, mode, game, role, countThreshold, delay) {
+  watchers.set(channelId, watchQueue(channelId, guildId, mode, game, role, countThreshold, delay));
 
-  database.prepare(`INSERT OR REPLACE INTO watchers (channelId, userId, guildId, mode, game, role, everyone, countThreshold, delay) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(channelId, userId, guildId, mode, game, role, everyone ? 1 : 0, countThreshold, delay);
+  database.prepare(`INSERT OR REPLACE INTO watchers (channelId, userId, guildId, mode, game, role, countThreshold, delay) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(channelId, userId, guildId, mode, game, role, countThreshold, delay);
 }
 
 export function removeWatcher(channelId) {
@@ -84,7 +83,7 @@ export function getWatcherCount(guildId) {
 export async function loadWatchers() {
   for (const row of database.prepare('SELECT * FROM watchers').all()) {
     try {
-      watchers.set(row.channelId, watchQueue(row.channelId, row.mode, row.game, row.role, row.everyone === 1, row.countThreshold, row.delay));
+      watchers.set(row.channelId, watchQueue(row.channelId, row.guildId, row.mode, row.game, row.role, row.countThreshold, row.delay));
     } catch (err) {
       console.error(`Failed to restore watcher for ${row.channelId}`, err);
     }

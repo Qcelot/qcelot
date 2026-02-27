@@ -4,7 +4,7 @@ import { queueMessage } from './messages.js';
 import { removeWatcher } from './state.js';
 import { DiscordRequest } from "./utils.js";
 
-export function watchQueue(channelId, mode, game, role, everyone, countThreshold, delay) {
+export function watchQueue(channelId, guildId, mode, game, role, countThreshold, delay) {
   const modeObject = modesMap.get(mode);
   const gameObject = gamesMap.get(mode).get(game);
 
@@ -36,7 +36,7 @@ export function watchQueue(channelId, mode, game, role, everyone, countThreshold
           try {
             await DiscordRequest(`channels/${channelId}/messages`, {
               method: 'POST',
-              body: queueMessage(role, everyone, gameObject, count)
+              body: queueMessage(role, role === guildId, gameObject, count)
             });
           } catch (err) {
             if (err.message) {

@@ -109,7 +109,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
 
       const count = getCachedGameCount(modeObject.api, gameObject.api);
 
-      return await sendFormData(res, queueInteractionMessage(null, false, gameObject, count));
+      return await sendFormData(res, queueInteractionMessage(gameObject, count));
     }
 
     // "watch" command
@@ -143,9 +143,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       const delay = subcommand.options?.find(o => o.name === 'delay')?.value ?? 5;
       const role = subcommand.options?.find(o => o.name === 'role')?.value;
 
-      const everyone = guild_id && role === guild_id;
-
-      addWatcher(channel_id, userId, guild_id, mode, game, role, everyone, countThreshold, delay);
+      addWatcher(channel_id, userId, guild_id, mode, game, role, countThreshold, delay);
 
       return await sendFormData(res, STARTED_WATCHING(gameObject.name, countThreshold, delay));
     }
