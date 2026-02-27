@@ -143,9 +143,9 @@ const games = {
     { name: 'Solo Slime', api: 'solo_insane_slime', icon: 'slime_ball', count: 2 },
     { name: 'Solo TNT Madness', api: 'solo_insane_tnt_madness', icon: 'tnt', count: 2 },
     { name: 'Teams Lucky Block', api: 'teams_insane_lucky', icon: 'player_head_lucky_block', count: 18 },
-    { name: 'Teams Rush', api: 'teams_insane_rush', icon: 'ender_pearl', count: 3 },
-    { name: 'Teams Slime', api: 'teams_insane_slime', icon: 'slime_ball', count: 3 },
-    { name: 'Teams TNT Madness', api: 'teams_insane_tnt_madness', icon: 'tnt', count: 3 }
+    { name: 'Teams Rush', api: 'teams_insane_rush', icon: 'ender_pearl', count: 2 },
+    { name: 'Teams Slime', api: 'teams_insane_slime', icon: 'slime_ball', count: 2 },
+    { name: 'Teams TNT Madness', api: 'teams_insane_tnt_madness', icon: 'tnt', count: 2 }
   ],
   smashheroes: [
     { name: '1v1', api: '1v1_normal', icon: 'player_head_spooderman', count: 2 },
