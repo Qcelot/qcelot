@@ -22,10 +22,10 @@ export function queueMessage(role, everyone, gameObject, count) {
   return buildFormData(queueMessageContent(role, everyone, gameObject, count), `./assets/icons/${gameObject.icon}.png`, `${gameObject.icon}.png`);
 }
 
-export function queueInteractionMessage(role, everyone, gameObject, count) {
+export function queueInteractionMessage(gameObject, count) {
   return buildFormData({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: queueMessageContent(role, everyone, gameObject, count)
+    data: queueMessageContent(null, false, gameObject, count)
   }, `./assets/icons/${gameObject.icon}.png`, `${gameObject.icon}.png`);
 }
 
