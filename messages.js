@@ -45,7 +45,7 @@ export function queueInteractionEditMessage(mode, gameObject, count, timestamp, 
   return buildFormData({
     type: InteractionResponseType.UPDATE_MESSAGE,
     data: queueMessageContent(null, false, mode, gameObject, count, timestamp, range)
-  }, `./assets/icons/${gameObject.icon}.png`, `${gameObject.icon}.png`);
+  }, null, null);
 }
 
 export const HELP = buildFormData({
