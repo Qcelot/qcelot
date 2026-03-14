@@ -57,11 +57,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
   }
 
   if (type === InteractionType.MESSAGE_COMPONENT) {
-    const [action, range, modeGame] = data.custom_id.split('_');
+    const [action, range, mode, game] = data.custom_id.split('_');
 
     if (action === 'peak') {
-      const [mode, game] = modeGame.split('.');
-
       const modeObject = modesMap.get(mode);
       const gameObject = gamesMap.get(mode).get(game);
 

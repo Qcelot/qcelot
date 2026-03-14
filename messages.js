@@ -19,10 +19,10 @@ function queueMessageContent(role, everyone, mode, gameObject, count, timestamp,
       {
         type: 1,
         components: [
-          { type: 2, style: range === 1 ? 1 : 2, custom_id: `peak_1_${mode}.${gameObject.name}`, label: '1 Hour' },
-          { type: 2, style: range === 6 ? 1 : 2, custom_id: `peak_6_${mode}.${gameObject.name}`, label: '6 Hours' },
-          { type: 2, style: range === 12 ? 1 : 2, custom_id: `peak_12_${mode}.${gameObject.name}`, label: '12 Hours' },
-          { type: 2, style: range === 24 ? 1 : 2, custom_id: `peak_24_${mode}.${gameObject.name}`, label: '24 Hours' }
+          { type: 2, style: range === 1 ? 1 : 2, custom_id: `peak_1_${mode}_${gameObject.name}`, label: '1 Hour' },
+          { type: 2, style: range === 6 ? 1 : 2, custom_id: `peak_6_${mode}_${gameObject.name}`, label: '6 Hours' },
+          { type: 2, style: range === 12 ? 1 : 2, custom_id: `peak_12_${mode}_${gameObject.name}`, label: '12 Hours' },
+          { type: 2, style: range === 24 ? 1 : 2, custom_id: `peak_24_${mode}_${gameObject.name}`, label: '24 Hours' }
         ]
       }
     ] : undefined
