@@ -70,7 +70,7 @@ const games = {
   ],
   blitz: [
     { name: 'Solo', api: 'solo_normal', icon: 'diamond_sword', count: 9 },
-    { name: 'Teams', api: 'team_normal', icon: 'diamond_sword', count: 9 }
+    { name: 'Teams', api: 'teams_normal', icon: 'diamond_sword', count: 9 }
   ],
   buildbattle: [
     { name: 'Guess The Build', api: 'BUILD_BATTLE_GUESS_THE_BUILD', icon: 'crafting_table', count: 3 },
