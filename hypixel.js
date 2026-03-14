@@ -22,6 +22,7 @@ setTimeout(async () => {
             if (count > peaks[mode].modes[game])
               peaks[mode].modes[game] = count;
       }
+      else peaks = JSON.parse(JSON.stringify(games));
     } catch (err) {
       console.error("Error fetching queue details:", err);
     }
