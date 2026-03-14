@@ -98,6 +98,8 @@ function errorMessageEdit(title, description) {
           color: 0x565461
         }
       ],
+      components: [],
+      attachments: [],
       flags: InteractionResponseFlags.EPHEMERAL
     }
   }, `./assets/icons/barrier.png`, `barrier.png`);
